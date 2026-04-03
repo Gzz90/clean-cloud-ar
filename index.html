@@ -3,35 +3,34 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clean Cloud AR</title>
-    
+
     <script type="importmap">
     {
       "imports": {
         "three": "https://unpkg.com/three@0.147.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.147.0/examples/jsm/",
         "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js"
       }
     }
     </script>
 
     <style>
-      body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-      #container { width: 100vw; height: 100vh; }
+      body { margin: 0; overflow: hidden; font-family: sans-serif; }
+      #container { width: 100vw; height: 100vh; position: relative; }
       
-      /* Интерфейс */
+      /* Интерфейс поверх AR */
       #ui-overlay {
-        position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-        display: none; flex-direction: column; gap: 12px; z-index: 10; width: 80%; max-width: 300px;
+        position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
+        display: none; flex-direction: column; gap: 10px; z-index: 10;
       }
       .btn {
-        padding: 15px; background: #e91e63; color: white; border: none;
-        border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 16px;
-        box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4); text-align: center; text-decoration: none;
+        padding: 15px 30px; background: #e91e63; color: white; border: none;
+        border-radius: 25px; font-weight: bold; cursor: pointer; font-size: 16px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-align: center; text-decoration: none;
       }
       #promo-display {
-        display: none; padding: 25px; background: white; border-radius: 20px;
+        display: none; padding: 20px; background: white; border-radius: 15px;
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        text-align: center; border: 2px solid #e91e63; z-index: 20; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        text-align: center; border: 3px solid #e91e63; z-index: 20; width: 200px;
       }
     </style>
   </head>
@@ -39,55 +38,51 @@
     <div id="container"></div>
 
     <div id="ui-overlay">
-      <button class="btn" id="claim-btn">🎁 Забрать баллы</button>
-      <a href="https://your-site.com" class="btn" style="background: white; color: #e91e63;">🌐 Перейти на сайт</a>
+      <button class="btn" id="claim-btn">Забрать баллы</button>
+      <a href="https://your-site.com" class="btn" style="background: #fff; color: #e91e63;">На сайт</a>
     </div>
 
     <div id="promo-display">
-      <p style="margin: 0; color: #666;">Твой промокод:</p>
-      <h2 id="promo-code" style="color: #e91e63; font-size: 32px; margin: 10px 0;">CLEAN2026</h2>
-      <button class="btn" onclick="copyPromo()" style="padding: 10px 20px; font-size: 14px;">Копировать</button>
-      <button onclick="document.getElementById('promo-display').style.display='none'" style="display: block; margin: 15px auto 0; background: none; border: none; color: #999; cursor: pointer;">Закрыть</button>
+      <p>Твой промокод:</p>
+      <h2 id="promo-code">CLEAN2026</h2>
+      <button onclick="window.copyPromo()">Копировать</button>
+      <button onclick="document.getElementById('promo-display').style.display='none'">Закрыть</button>
     </div>
 
     <script type="module">
       import * as THREE from 'three';
       import { MindARThree } from 'mindar-image-three';
 
-      // Глобальная функция для копирования
+      // Делаем функцию доступной для кнопок в HTML
       window.copyPromo = function() {
         const code = document.getElementById('promo-code').innerText;
         navigator.clipboard.writeText(code).then(() => {
-          alert("Промокод скопирован в буфер обмена!");
+            alert("Промокод скопирован!");
         });
       };
 
       const start = async () => {
-        // Инициализация AR
         const mindarThree = new MindARThree({
           container: document.querySelector("#container"),
-          imageTargetSrc: './targets.mind', // Убедись, что этот файл лежит в той же папке на GitHub
+          imageTargetSrc: './targets.mind', // Файл должен быть в корне репозитория!
         });
 
         const {renderer, scene, camera} = mindarThree;
 
         // Свет
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-        scene.add(ambientLight);
-        const directLight = new THREE.DirectionalLight(0xffffff, 0.5);
-        directLight.position.set(0, 1, 1);
-        scene.add(directLight);
+        const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+        scene.add(light);
 
-        // Якорь для первого изображения (индекс 0)
+        // Привязка к первому маркеру
         const anchor = mindarThree.addAnchor(0);
 
-        // Временный объект (Красный куб), пока нет модели облака
+        // Временный красный куб (заменится на Облако)
         const geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-        const material = new THREE.MeshStandardMaterial({ color: 0xe91e63 });
+        const material = new THREE.MeshStandardMaterial({color: 0xff0000});
         const cube = new THREE.Mesh(geometry, material);
         anchor.group.add(cube);
 
-        // Показ/скрытие кнопок при нахождении маркера
+        // Показ кнопок
         anchor.onTargetFound = () => {
           document.getElementById('ui-overlay').style.display = 'flex';
         };
@@ -95,16 +90,16 @@
           document.getElementById('ui-overlay').style.display = 'none';
         };
 
-        // Запуск камеры
+        // Старт
         await mindarThree.start();
         
         renderer.setAnimationLoop(() => {
-          cube.rotation.y += 0.01; // Пусть кубик крутится для наглядности
+          cube.rotation.y += 0.01; // Анимация вращения куба
           renderer.render(scene, camera);
         });
-      };
+      }
 
-      // Обработка кнопки
+      // Обработка клика
       document.getElementById('claim-btn').addEventListener('click', () => {
         document.getElementById('promo-display').style.display = 'block';
       });
