@@ -2,8 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js"></script>
-
+    <title>Clean Cloud AR</title>
     <style>
       body { margin: 0; overflow: hidden; font-family: sans-serif; }
       #container { width: 100vw; height: 100vh; }
@@ -21,7 +20,7 @@
       #promo-display {
         display: none; padding: 20px; background: white; border-radius: 15px;
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        text-align: center; border: 3px solid #e91e63; z-index: 20;
+        text-align: center; border: 3px solid #e91e63; z-index: 20; width: 250px;
       }
     </style>
   </head>
@@ -40,63 +39,58 @@
       <button onclick="document.getElementById('promo-display').style.display='none'">Закрыть</button>
     </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/loaders/GLTFLoader.js"></script>
 
-<script type="module">
-  // Импортируем MindAR как модуль
-  import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js';
+    <script type="module">
+      import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-three.prod.js';
 
-  const start = async () => {
-    const mindarThree = new MindARThree({
-      container: document.querySelector("#container"),
-      imageTargetSrc: './targets.mind', 
-    });
+      // Делаем функции доступными для HTML-кнопок
+      window.copyPromo = function() {
+        const code = document.getElementById('promo-code').innerText;
+        navigator.clipboard.writeText(code);
+        alert("Промокод скопирован!");
+      };
 
-    const {renderer, scene, camera} = mindarThree;
+      const start = async () => {
+        const mindarThree = new MindARThree({
+          container: document.querySelector("#container"),
+          imageTargetSrc: './targets.mind', // Убедись, что этот файл есть в папке!
+        });
 
-    // Освещение
-    const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-    scene.add(light);
+        const {renderer, scene, camera} = mindarThree;
 
-    const anchor = mindarThree.addAnchor(0);
+        const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+        scene.add(light);
 
-    // Добавим временный красный куб, чтобы ты видел, что всё работает, 
-    // пока нет модели облака
-    const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-    const material = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0.7});
-    const cube = new THREE.Mesh(geometry, material);
-    anchor.group.add(cube);
+        const anchor = mindarThree.addAnchor(0);
 
-    // Логика кнопок
-    anchor.onTargetFound = () => {
-      document.getElementById('ui-overlay').style.display = 'flex';
-    };
-    anchor.onTargetLost = () => {
-      document.getElementById('ui-overlay').style.display = 'none';
-    };
+        // Красный куб-заглушка
+        const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+        const material = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0.7});
+        const cube = new THREE.Mesh(geometry, material);
+        anchor.group.add(cube);
 
-    await mindarThree.start();
-    
-    renderer.setAnimationLoop(() => {
-      renderer.render(scene, camera);
-    });
-  }
+        anchor.onTargetFound = () => {
+          document.getElementById('ui-overlay').style.display = 'flex';
+        };
+        anchor.onTargetLost = () => {
+          document.getElementById('ui-overlay').style.display = 'none';
+        };
 
-  // Запускаем всё
-  start();
+        await mindarThree.start();
+        
+        renderer.setAnimationLoop(() => {
+          renderer.render(scene, camera);
+        });
+      };
 
-  // Делаем функцию копирования доступной глобально
-  window.copyPromo = function() {
-    const code = document.getElementById('promo-code').innerText;
-    navigator.clipboard.writeText(code);
-    alert("Промокод скопирован!");
-  }
-  
-  // Обработчик кнопки промокода
-  document.getElementById('claim-btn').addEventListener('click', () => {
-    document.getElementById('promo-display').style.display = 'block';
-  });
-</script>
+      // Слушатель для кнопки
+      document.getElementById('claim-btn').addEventListener('click', () => {
+        document.getElementById('promo-display').style.display = 'block';
+      });
+
+      start();
+    </script>
   </body>
 </html>
